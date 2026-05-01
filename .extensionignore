@@ -1,0 +1,14 @@
+# .extensionignore
+
+# Development files
+.git/
+.github/
+.gitignore
+
+# Documentation not needed at install time
+CHANGELOG.md
+CONTRIBUTING.md
+.extensionignore
+
+# Test artifacts
+tests/

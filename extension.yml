@@ -1,0 +1,53 @@
+schema_version: "1.0"
+
+extension:
+  id: token-analyzer
+  name: "Token Consumption Analyzer"
+  version: "0.1.0"
+  description: "Captures, analyzes, and compares token consumption across SDD workflows"
+  author: "Chris Roberts | coderandhiker"
+  repository: "https://github.com/coderandhiker/spec-kit-token-analyzer"
+  license: "MIT"
+
+requires:
+  speckit_version: ">=0.2.0"
+
+provides:
+  commands:
+    - name: speckit.token-analyzer.baseline
+      file: commands/speckit.token-analyzer.baseline.md
+      description: "Capture baseline token metrics for a test scenario"
+    - name: speckit.token-analyzer.compare
+      file: commands/speckit.token-analyzer.compare.md
+      description: "Compare token consumption between two runs"
+    - name: speckit.token-analyzer.report
+      file: commands/speckit.token-analyzer.report.md
+      description: "Generate token analysis report from captured data"
+
+hooks:
+  after_specify:
+    command: speckit.token-analyzer.baseline
+    optional: true
+    prompt: "Capture token metrics from specification?"
+    description: "Capture token metrics after specification generation"
+  after_plan:
+    command: speckit.token-analyzer.baseline
+    optional: true
+    prompt: "Capture token metrics from planning?"
+    description: "Capture token metrics after implementation planning"
+  after_tasks:
+    command: speckit.token-analyzer.baseline
+    optional: true
+    prompt: "Capture token metrics from task generation?"
+    description: "Capture token metrics after task generation"
+  after_implement:
+    command: speckit.token-analyzer.baseline
+    optional: true
+    prompt: "Capture token metrics from implementation?"
+    description: "Capture token metrics after implementation"
+
+tags:
+  - "tokens"
+  - "measurement"
+  - "optimization"
+  - "analysis"
