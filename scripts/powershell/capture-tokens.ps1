@@ -22,7 +22,10 @@ param(
 
     [switch]$Json,
 
-    [string]$File
+    [string]$File,
+
+    [Parameter(ValueFromPipeline=$true)]
+    [string]$PipelineInput
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,7 +38,11 @@ if ($File) {
     }
     $RawInput = Get-Content -Raw $File
 } else {
-    $RawInput = $input | Out-String
+    if ($PipelineInput) {
+        $RawInput = $PipelineInput
+    } else {
+        $RawInput = @($input) -join "`n"
+    }
 }
 
 # Parse JSON
