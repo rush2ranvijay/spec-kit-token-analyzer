@@ -47,6 +47,11 @@ try {
 }
 
 # Extract token fields - handle nested structures
+# Supports three provider formats:
+#   - Anthropic/Claude: input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens
+#   - OpenAI/Copilot:   prompt_tokens, completion_tokens, total_tokens
+#   - Google Gemini:    promptTokenCount, candidatesTokenCount, totalTokenCount, cachedContentTokenCount
+
 function Find-Field {
     param($obj, $fieldName)
     if ($null -eq $obj) { return 0 }
@@ -73,12 +78,41 @@ function Find-StringField {
     return "unknown"
 }
 
-$InputTokens = [int](Find-Field $parsed "input_tokens")
-$OutputTokens = [int](Find-Field $parsed "output_tokens")
-$CacheRead = [int](Find-Field $parsed "cache_read_input_tokens")
+function Find-FieldMulti {
+    param($obj, [string[]]$fieldNames)
+    foreach ($name in $fieldNames) {
+        $val = [int](Find-Field $obj $name)
+        if ($val -ne 0) { return $val }
+    }
+    return 0
+}
+
+function Find-StringFieldMulti {
+    param($obj, [string[]]$fieldNames)
+    foreach ($name in $fieldNames) {
+        $val = Find-StringField $obj $name
+        if ($val -ne "unknown" -and $val -ne "") { return $val }
+    }
+    return "unknown"
+}
+
+# Input tokens:  Claude input_tokens -> OpenAI prompt_tokens -> Gemini promptTokenCount
+$InputTokens = [int](Find-FieldMulti $parsed @("input_tokens", "prompt_tokens", "promptTokenCount"))
+
+# Output tokens: Claude output_tokens -> OpenAI completion_tokens -> Gemini candidatesTokenCount
+$OutputTokens = [int](Find-FieldMulti $parsed @("output_tokens", "completion_tokens", "candidatesTokenCount"))
+
+# Cache read:    Claude cache_read_input_tokens -> Gemini cachedContentTokenCount
+$CacheRead = [int](Find-FieldMulti $parsed @("cache_read_input_tokens", "cachedContentTokenCount"))
+
+# Cache creation: Claude only
 $CacheCreation = [int](Find-Field $parsed "cache_creation_input_tokens")
-$Model = Find-StringField $parsed "model"
-$StopReason = Find-StringField $parsed "stop_reason"
+
+# Model: universal "model" -> Gemini "modelVersion"
+$Model = Find-StringFieldMulti $parsed @("model", "modelVersion")
+
+# Stop reason: Claude stop_reason -> OpenAI finish_reason -> Gemini finishReason
+$StopReason = Find-StringFieldMulti $parsed @("stop_reason", "finish_reason", "finishReason")
 $TotalTokens = $InputTokens + $OutputTokens
 
 # Ensure output directory exists

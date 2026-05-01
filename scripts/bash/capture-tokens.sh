@@ -52,6 +52,11 @@ mkdir -p "$DATA_DIR"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date +"%Y-%m-%dT%H:%M:%SZ")
 
 # --- Parse token fields ---
+# Supports three provider formats:
+#   - Anthropic/Claude: input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens
+#   - OpenAI/Copilot:   prompt_tokens, completion_tokens, total_tokens
+#   - Google Gemini:    promptTokenCount, candidatesTokenCount, totalTokenCount, cachedContentTokenCount
+
 # Try jq first, fall back to grep/sed
 extract_field() {
     local field="$1"
@@ -73,12 +78,50 @@ extract_string_field() {
     fi | head -1 || echo "$default"
 }
 
-INPUT_TOKENS=$(extract_field "input_tokens" "0")
-OUTPUT_TOKENS=$(extract_field "output_tokens" "0")
-CACHE_READ=$(extract_field "cache_read_input_tokens" "0")
+# Try first field, fall back to second, then third
+extract_field_multi() {
+    local default="$1"; shift
+    for field in "$@"; do
+        local val
+        val=$(extract_field "$field" "")
+        if [[ -n "$val" && "$val" != "0" ]]; then
+            echo "$val"
+            return
+        fi
+    done
+    echo "$default"
+}
+
+extract_string_field_multi() {
+    local default="$1"; shift
+    for field in "$@"; do
+        local val
+        val=$(extract_string_field "$field" "")
+        if [[ -n "$val" && "$val" != "unknown" && "$val" != "" ]]; then
+            echo "$val"
+            return
+        fi
+    done
+    echo "$default"
+}
+
+# Input tokens:  Claude input_tokens → OpenAI prompt_tokens → Gemini promptTokenCount
+INPUT_TOKENS=$(extract_field_multi "0" "input_tokens" "prompt_tokens" "promptTokenCount")
+
+# Output tokens: Claude output_tokens → OpenAI completion_tokens → Gemini candidatesTokenCount
+OUTPUT_TOKENS=$(extract_field_multi "0" "output_tokens" "completion_tokens" "candidatesTokenCount")
+
+# Cache read:    Claude cache_read_input_tokens → Gemini cachedContentTokenCount
+CACHE_READ=$(extract_field_multi "0" "cache_read_input_tokens" "cachedContentTokenCount")
+
+# Cache creation: Claude only
 CACHE_CREATION=$(extract_field "cache_creation_input_tokens" "0")
-MODEL=$(extract_string_field "model" "unknown")
-STOP_REASON=$(extract_string_field "stop_reason" "unknown")
+
+# Model: universal "model" field → Gemini "modelVersion"
+MODEL=$(extract_string_field_multi "unknown" "model" "modelVersion")
+
+# Stop reason: Claude stop_reason → OpenAI finish_reason → Gemini finishReason
+STOP_REASON=$(extract_string_field_multi "unknown" "stop_reason" "finish_reason" "finishReason")
 
 # Handle empty values
 INPUT_TOKENS=${INPUT_TOKENS:-0}
