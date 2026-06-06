@@ -1,18 +1,5 @@
 ---
 description: "Capture baseline token metrics for a test scenario"
-scripts:
-  capture-tokens:
-    sh: ../scripts/bash/capture-tokens.sh
-    ps: ../scripts/powershell/capture-tokens.ps1
-  estimate-tokens:
-    sh: ../scripts/bash/estimate-tokens.sh
-    ps: ../scripts/powershell/estimate-tokens.ps1
-  score-quality:
-    sh: ../scripts/bash/score-quality.sh
-    ps: ../scripts/powershell/score-quality.ps1
-  generate-report:
-    sh: ../scripts/bash/generate-report.sh
-    ps: ../scripts/powershell/generate-report.ps1
 ---
 
 # Capture Token Baseline

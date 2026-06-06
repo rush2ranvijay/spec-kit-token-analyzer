@@ -1,9 +1,5 @@
 ---
 description: "Compare token consumption between two runs"
-scripts:
-  generate-report:
-    sh: ../scripts/bash/generate-report.sh
-    ps: ../scripts/powershell/generate-report.ps1
 ---
 
 # Compare Token Consumption
