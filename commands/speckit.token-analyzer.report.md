@@ -1,9 +1,5 @@
 ---
 description: "Generate token analysis report from captured data"
-scripts:
-  generate-report:
-    sh: ../scripts/bash/generate-report.sh
-    ps: ../scripts/powershell/generate-report.ps1
 ---
 
 # Generate Token Analysis Report
